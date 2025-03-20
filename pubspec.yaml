@@ -71,7 +71,8 @@ flutter:
     - assets/camera.jpg
     - assets/laptop2.jpg
     - assets/headphones.jpg
-
+    - assets/profile.jpg
+   
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
