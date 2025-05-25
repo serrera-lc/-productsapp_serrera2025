@@ -57,15 +57,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> loadProducts() async {
     try {
-      final response =
-          await http.get(Uri.parse('${AppConfig.baseUrl}/api/products?all=1'));
+      final response = await http.get(Uri.parse('${AppConfig.baseUrl}/api/products?all=1'));
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
-        final raw = jsonData['data'] ?? jsonData;
-        List<Map<String, dynamic>> fetched =
-            List<Map<String, dynamic>>.from(raw);
+        List<Map<String, dynamic>> fetched = List<Map<String, dynamic>>.from(jsonData['data'] ?? jsonData);
         fetched.shuffle(Random());
-
         setState(() {
           allProducts = fetched;
           isLoading = false;
@@ -79,18 +75,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> loadCategories() async {
     try {
-      final response =
-          await http.get(Uri.parse('${AppConfig.baseUrl}/api/categories'));
+      final response = await http.get(Uri.parse('${AppConfig.baseUrl}/api/categories'));
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
         setState(() {
-          categories = data
-              .map<Map<String, dynamic>>((item) => {
-                    'id': item['id'],
-                    'name': item['name'],
-                    'image_path': item['image_path'],
-                  })
-              .toList();
+          categories = data.map<Map<String, dynamic>>((item) => {
+            'id': item['id'],
+            'name': item['name'],
+            'image_path': item['image_path'],
+          }).toList();
         });
       }
     } catch (e) {
@@ -108,48 +101,84 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget productList(List<Map<String, dynamic>> items, {Set<int>? excludeIds}) {
     return SizedBox(
-      height: 200,
+      height: 240,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         itemCount: items.length,
         itemBuilder: (context, index) {
           final product = items[index];
-          if (excludeIds != null && excludeIds.contains(product['id'])) {
-            return SizedBox.shrink(); // Skip duplicates
-          }
-          final hasImage = product['image_path'] != null &&
-              product['image_path'].toString().isNotEmpty;
-          final imageWidget = hasImage &&
-                  !product['image_path']
-                      .toString()
-                      .toLowerCase()
-                      .endsWith('.asset')
-              ? Image.network(
-                  '${AppConfig.baseUrl}/storage/${product['image_path']}',
-                  height: 100,
-                  width: 130,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Image.asset(
-                      'assets/product_placeholder.png',
-                      height: 100,
-                      width: 130,
-                      fit: BoxFit.cover),
-                )
-              : Image.asset('assets/product_placeholder.png',
-                  height: 100, width: 130, fit: BoxFit.cover);
+          if (excludeIds != null && excludeIds.contains(product['id'])) return SizedBox.shrink();
+
+          final imagePath = product['image_path'] != null && product['image_path'].toString().isNotEmpty
+              ? '${AppConfig.baseUrl}/storage/${product['image_path']}'
+              : 'assets/product_placeholder.png';
+
           return Padding(
-            padding: EdgeInsets.only(right: 10),
+            padding: EdgeInsets.only(right: 12),
             child: GestureDetector(
               onTap: () => Navigator.push(
                 context,
-                MaterialPageRoute(
-                    builder: (_) => ProductDetailsScreen(product: product)),
+                MaterialPageRoute(builder: (_) => ProductDetailsScreen(product: product)),
               ),
-              child: ProductItem(
-                imageWidget: imageWidget,
-                name: product['name']?.toString() ?? '',
-                description: product['description']?.toString() ?? '',
-                price: '₱${product['price']?.toString() ?? ''}',
+              child: Container(
+                width: 160,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black12,
+                      blurRadius: 6,
+                      offset: Offset(2, 4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                      child: Image.network(
+                        imagePath,
+                        height: 120,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Image.asset(
+                          'assets/product_placeholder.png',
+                          height: 120,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(
+                        product['name']?.toString() ?? '',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      child: Text(
+                        product['description']?.toString() ?? '',
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+                      ),
+                    ),
+                    Spacer(),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(
+                        '₱${product['price']?.toString() ?? ''}',
+                        style: TextStyle(fontSize: 14, color: Colors.orange[800], fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           );
@@ -162,81 +191,87 @@ class _HomeScreenState extends State<HomeScreen> {
     final random = Random();
     final recommended = List<Map<String, dynamic>>.from(items)..shuffle(random);
     final recs = recommended.take(4).toList();
-    return Column(
-      children: [
-        Row(
-          children: [
-            Expanded(
-                child: GestureDetector(
-              onTap: () => _navigateToProductInfo(recs, 0),
-              child: RecommendedProductItem(
-                  imagePath: getProductImage(recs, 0),
-                  price: getProductPrice(recs, 0),
-                  name: getProductName(recs, 0),
-                  description: getProductDesc(recs, 0)),
-            )),
-            SizedBox(width: 10),
-            Expanded(
-                child: GestureDetector(
-              onTap: () => _navigateToProductInfo(recs, 1),
-              child: RecommendedProductItem(
-                  imagePath: getProductImage(recs, 1),
-                  price: getProductPrice(recs, 1),
-                  name: getProductName(recs, 1),
-                  description: getProductDesc(recs, 1)),
-            )),
-          ],
-        ),
-        SizedBox(height: 10),
-        Row(
-          children: [
-            Expanded(
-                child: GestureDetector(
-              onTap: () => _navigateToProductInfo(recs, 2),
-              child: RecommendedProductItem(
-                  imagePath: getProductImage(recs, 2),
-                  price: getProductPrice(recs, 2),
-                  name: getProductName(recs, 2),
-                  description: getProductDesc(recs, 2)),
-            )),
-            SizedBox(width: 10),
-            Expanded(
-                child: GestureDetector(
-              onTap: () => _navigateToProductInfo(recs, 3),
-              child: RecommendedProductItem(
-                  imagePath: getProductImage(recs, 3),
-                  price: getProductPrice(recs, 3),
-                  name: getProductName(recs, 3),
-                  description: getProductDesc(recs, 3)),
-            )),
-          ],
-        ),
-      ],
+
+    return GridView.builder(
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        mainAxisSpacing: 12,
+        crossAxisSpacing: 12,
+        childAspectRatio: 0.7,
+      ),
+      physics: NeverScrollableScrollPhysics(),
+      shrinkWrap: true,
+      itemCount: recs.length,
+      itemBuilder: (context, index) => _buildRecommendedCard(recs, index),
     );
   }
 
-  String getProductImage(List<Map<String, dynamic>> list, int idx) {
-    if (idx >= list.length) return 'assets/product_placeholder.png';
-    final p = list[idx];
-    if (p['image_path'] != null && p['image_path'].toString().isNotEmpty) {
-      return '${AppConfig.baseUrl}/storage/${p['image_path']}';
-    }
-    return 'assets/product_placeholder.png';
-  }
+  Widget _buildRecommendedCard(List<Map<String, dynamic>> recs, int idx) {
+    if (idx >= recs.length) return SizedBox.shrink();
 
-  String getProductPrice(List<Map<String, dynamic>> list, int idx) {
-    if (idx >= list.length) return '';
-    return '₱${list[idx]['price']?.toString() ?? ''}';
-  }
+    final product = recs[idx];
+    final imagePath = product['image_path'] != null && product['image_path'].toString().isNotEmpty
+        ? '${AppConfig.baseUrl}/storage/${product['image_path']}'
+        : 'assets/product_placeholder.png';
 
-  String getProductName(List<Map<String, dynamic>> list, int idx) {
-    if (idx >= list.length) return '';
-    return list[idx]['name']?.toString() ?? '';
-  }
-
-  String getProductDesc(List<Map<String, dynamic>> list, int idx) {
-    if (idx >= list.length) return '';
-    return list[idx]['description']?.toString() ?? '';
+    return GestureDetector(
+      onTap: () => _navigateToProductInfo(recs, idx),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(2, 4)),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+              child: Image.network(
+                imagePath,
+                height: 100,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Image.asset(
+                  'assets/product_placeholder.png',
+                  height: 100,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                product['name']?.toString() ?? '',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: Text(
+                product['description']?.toString() ?? '',
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+              ),
+            ),
+            Spacer(),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                '₱${product['price']?.toString() ?? ''}',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.orange[800]),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   void _navigateToProductInfo(List<Map<String, dynamic>> list, int idx) {
@@ -244,9 +279,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final product = list[idx];
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => ProductDetailsScreen(product: product),
-      ),
+      MaterialPageRoute(builder: (_) => ProductDetailsScreen(product: product)),
     );
   }
 
@@ -266,11 +299,23 @@ class _HomeScreenState extends State<HomeScreen> {
     final random = Random();
     final hotDeals = List<Map<String, dynamic>>.from(items)..shuffle(random);
     final recs = hotDeals.take(4).toList();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        sectionTitle('Hot Deals'),
-        recommendedGrid(recs),
+        sectionTitle('🔥 Hot Deals'),
+        SizedBox(height: 10),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, 4)),
+            ],
+          ),
+          padding: EdgeInsets.all(12),
+          child: recommendedGrid(recs),
+        ),
       ],
     );
   }
@@ -284,10 +329,11 @@ class _HomeScreenState extends State<HomeScreen> {
     final bestSellersSection = allProducts.skip(split).toList();
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Color(0xFFF5F6FA),
       appBar: AppBar(
         backgroundColor: backgroundModel.appBar,
         elevation: 0,
+        title: Text("Welcome", style: TextStyle(color: Colors.black)),
         actions: [
           Icon(Icons.notifications_none, color: Colors.black),
           SizedBox(width: 15),
@@ -304,14 +350,10 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CircleAvatar(
-                      backgroundImage: AssetImage("assets/profile.jpg"),
-                      radius: 30),
+                  CircleAvatar(backgroundImage: AssetImage("assets/profile.jpg"), radius: 30),
                   SizedBox(height: 10),
-                  Text(userName ?? "User Name",
-                      style: TextStyle(fontSize: 18, color: Colors.white)),
-                  Text(userEmail ?? "user@example.com",
-                      style: TextStyle(fontSize: 14, color: Colors.white70)),
+                  Text(userName ?? "User Name", style: TextStyle(fontSize: 18, color: Colors.white)),
+                  Text(userEmail ?? "user@example.com", style: TextStyle(fontSize: 14, color: Colors.white70)),
                 ],
               ),
             ),
@@ -323,8 +365,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ListTile(
               leading: Icon(Icons.add_box),
               title: Text(isFilipino ? "Magdagdag ng Produkto" : 'Add Product'),
-              onTap: () => Navigator.push(context,
-                  MaterialPageRoute(builder: (_) => AddProductScreen())),
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AddProductScreen())),
             ),
             ListTile(
               leading: Icon(Icons.inventory),
@@ -334,68 +375,55 @@ class _HomeScreenState extends State<HomeScreen> {
                 final prefs = await SharedPreferences.getInstance();
                 final userId = prefs.getInt('user_id');
                 if (userId != null) {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (_) => MyProductsScreen(userId: userId)));
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => MyProductsScreen(userId: userId)));
                 } else {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text(isFilipino
-                          ? "Walang naka-log in na user."
-                          : "No user logged in.")));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(isFilipino ? "Walang naka-log in na user." : "No user logged in.")),
+                  );
                 }
               },
             ),
             ListTile(
               leading: Icon(Icons.settings),
               title: Text('Settings'),
-              onTap: () => Navigator.push(
-                  context, MaterialPageRoute(builder: (_) => SettingsScreen())),
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => SettingsScreen())),
             ),
             ListTile(
               leading: Icon(Icons.logout),
               title: Text(isFilipino ? "Mag-Logout" : 'Logout'),
-              onTap: () => Navigator.pushReplacement(
-                  context, MaterialPageRoute(builder: (_) => LoginScreen())),
+              onTap: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => LoginScreen())),
             ),
           ],
         ),
       ),
       body: isLoading
           ? Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: () async {
-                await loadProducts();
-                await loadCategories();
-                await loadUserInfo();
-              },
-              child: SingleChildScrollView(
-                physics: AlwaysScrollableScrollPhysics(),
-                padding: EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(height: 20),
-                    Image.asset("assets/banner.jpg",
-                        height: 300, width: double.infinity, fit: BoxFit.cover),
-                    SizedBox(height: 20),
-                    sectionTitle(isFilipino ? "Mga Produkto" : "Products"),
-                    productList(productsSection),
-                    sectionTitleWithAction(
-                      isFilipino ? "Pinakamabenta" : "Best Seller",
-                      isFilipino ? "Ipakita lahat >" : "See all >",
-                    ),
-                    productList(bestSellersSection),
-                    sectionTitle(isFilipino ? "Mga Kategorya" : "Categories"),
-                    categoryGrid(),
-                    sectionTitle(isFilipino
-                        ? "Inirerekomenda para sa iyo"
-                        : "Recommended for you"),
-                    recommendedGrid(allProducts),
-                    trendingProductsSection(allProducts),
-                    hotDealsSection(allProducts),
-                  ],
-                ),
+          : SingleChildScrollView(
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(height: 20),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Image.asset("assets/banner.jpg", height: 250, width: double.infinity, fit: BoxFit.cover),
+                  ),
+                  SizedBox(height: 20),
+                  sectionTitle(isFilipino ? "Mga Produkto" : "Products"),
+                  productList(productsSection),
+                  sectionTitleWithAction(
+                    isFilipino ? "Pinakamabenta" : "Best Seller",
+                    isFilipino ? "Ipakita lahat >" : "See all >",
+                  ),
+                  productList(bestSellersSection),
+                  sectionTitle(isFilipino ? "Mga Kategorya" : "Categories"),
+                  categoryGrid(),
+                  sectionTitle(isFilipino ? "Inirerekomenda para sa iyo" : "Recommended for you"),
+                  recommendedGrid(allProducts),
+                  trendingProductsSection(allProducts),
+                  hotDealsSection(allProducts),
+                  SizedBox(height: 20),
+                ],
               ),
             ),
     );
@@ -403,31 +431,52 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget sectionTitle(String title) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title,
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-        SizedBox(height: 10),
+        Text(
+          title,
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.black87),
+        ),
+        SizedBox(height: 6),
+        Container(
+          height: 3,
+          width: 30,
+          decoration: BoxDecoration(color: Colors.deepOrangeAccent, borderRadius: BorderRadius.circular(2)),
+        ),
+        SizedBox(height: 14),
       ],
     );
   }
 
-  Widget sectionTitleWithAction(String title, String actionText) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(title,
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-        Text(actionText, style: TextStyle(color: Colors.blue, fontSize: 14)),
-      ],
+  Widget sectionTitleWithAction(String title, String actionText, {VoidCallback? onActionTap}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            title,
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.black87),
+          ),
+          InkWell(
+            onTap: onActionTap,
+            borderRadius: BorderRadius.circular(4),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              child: Text(
+                actionText,
+                style: TextStyle(color: Colors.deepOrangeAccent, fontSize: 14, fontWeight: FontWeight.w500),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   Widget categoryGrid() {
-    // Shuffle and take only 4 categories
-    final List<Map<String, dynamic>> shuffled =
-        List<Map<String, dynamic>>.from(categories)..shuffle();
-    final List<Map<String, dynamic>> displayCategories =
-        shuffled.take(4).toList();
+    final List<Map<String, dynamic>> shuffled = List<Map<String, dynamic>>.from(categories)..shuffle();
+    final List<Map<String, dynamic>> displayCategories = shuffled.take(4).toList();
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: GridView.builder(
@@ -437,19 +486,17 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisCount: 2,
           mainAxisSpacing: 8,
           crossAxisSpacing: 8,
-          childAspectRatio: 1.4, // slightly wider
+          childAspectRatio: 1.4,
         ),
         itemCount: displayCategories.length,
         itemBuilder: (context, index) {
           final cat = displayCategories[index];
-          String imagePath = cat['image_path'] != null &&
-                  cat['image_path'].toString().isNotEmpty
+          String imagePath = cat['image_path'] != null && cat['image_path'].toString().isNotEmpty
               ? '${AppConfig.baseUrl}/storage/${cat['image_path']}'
               : 'assets/product_placeholder.png';
           return Card(
             elevation: 2,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             child: InkWell(
               borderRadius: BorderRadius.circular(12),
               onTap: () {
@@ -462,7 +509,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 );
-              }, // You can add navigation or action here
+              },
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Column(
@@ -470,23 +517,18 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                      child: imagePath.startsWith('http')
-                          ? Image.network(
-                              imagePath,
-                              height: 160,
-                              width: 200,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  Image.asset('assets/product_placeholder.png',
-                                      height: 60, width: 90, fit: BoxFit.cover),
-                            )
-                          : Image.asset(imagePath,
-                              height: 60, width: 90, fit: BoxFit.cover),
+                      child: Image.network(
+                        imagePath,
+                        height: 160,
+                        width: 200,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) =>
+                            Image.asset('assets/product_placeholder.png', height: 60, width: 90, fit: BoxFit.cover),
+                      ),
                     ),
                     SizedBox(height: 8),
                     Text(cat['name'] ?? '',
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 14),
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                         textAlign: TextAlign.center,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis),
@@ -496,146 +538,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           );
         },
-      ),
-    );
-  }
-}
-
-class ProductItem extends StatelessWidget {
-  final Widget imageWidget;
-  final String name;
-  final String description;
-  final String price;
-
-  const ProductItem({
-    super.key,
-    required this.imageWidget,
-    required this.name,
-    required this.description,
-    required this.price,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final backgroundModel = Provider.of<Backgroundmodel>(context);
-    return SizedBox(
-      width: 130,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          imageWidget,
-          SizedBox(height: 5),
-          Text(name,
-              style: TextStyle(fontWeight: FontWeight.bold),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis),
-          Text(description,
-              style: TextStyle(fontSize: 12, color: Colors.grey),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis),
-          SizedBox(height: 3),
-          Row(children: [
-            Icon(Icons.star, color: Colors.orange, size: 16),
-            Text(" 4.5")
-          ]),
-          SizedBox(height: 3),
-          Text(price,
-              style: TextStyle(
-                  color: backgroundModel.textColor,
-                  fontWeight: FontWeight.bold)),
-        ],
-      ),
-    );
-  }
-}
-
-class CategoryItem extends StatelessWidget {
-  final String title;
-  final String imagePath;
-
-  const CategoryItem({super.key, required this.title, required this.imagePath});
-
-  @override
-  Widget build(BuildContext context) {
-    final isNetwork = imagePath.startsWith('http');
-    return SizedBox(
-      width: 200,
-      child: Column(
-        children: [
-          isNetwork
-              ? Image.network(
-                  imagePath,
-                  height: 100,
-                  width: 200,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Image.asset(
-                      'assets/product_placeholder.png',
-                      height: 100,
-                      width: 200,
-                      fit: BoxFit.cover),
-                )
-              : Image.asset(imagePath,
-                  height: 100, width: 200, fit: BoxFit.cover),
-          SizedBox(height: 5),
-          Text(title,
-              style: TextStyle(fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center),
-        ],
-      ),
-    );
-  }
-}
-
-class RecommendedProductItem extends StatelessWidget {
-  final String imagePath;
-  final String price;
-  final String? name;
-  final String? description;
-
-  const RecommendedProductItem({
-    super.key,
-    required this.imagePath,
-    required this.price,
-    this.name,
-    this.description,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final backgroundModel = Provider.of<Backgroundmodel>(context);
-    return SizedBox(
-      width: 240, // wider
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          imagePath.startsWith('http')
-              ? Image.network(imagePath,
-                  height: 170, // higher
-                  width: 240, // wider
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Image.asset(
-                      'assets/product_placeholder.png',
-                      height: 170,
-                      width: 240,
-                      fit: BoxFit.cover))
-              : Image.asset(imagePath,
-                  height: 170, width: 240, fit: BoxFit.cover),
-          Text(name ?? "Product title",
-              style: TextStyle(fontWeight: FontWeight.bold)),
-          Text(description ?? "Product description",
-              style: TextStyle(fontSize: 12, color: Colors.grey)),
-          SizedBox(height: 5),
-          Text("30% Off",
-              style: TextStyle(
-                  color: const Color.fromRGBO(51, 171, 159, 1),
-                  fontWeight: FontWeight.bold)),
-          SizedBox(height: 5),
-          Text(price,
-              style: TextStyle(
-                  color: backgroundModel.textColor,
-                  fontWeight: FontWeight.bold)),
-          Text("500 sold", style: TextStyle(fontSize: 12, color: Colors.grey)),
-        ],
       ),
     );
   }

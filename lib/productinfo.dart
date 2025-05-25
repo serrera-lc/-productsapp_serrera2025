@@ -250,9 +250,9 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text("Rovi T.",
+                      Text("Jerome M.",
                           style: TextStyle(fontWeight: FontWeight.bold)),
-                      Text("Occaecat laboris cupidatat dolo",
+                      Text("Ang ganda!",
                           style: TextStyle(color: Colors.grey)),
                     ],
                   ),
@@ -266,9 +266,9 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text("Sean S.",
+                      Text("Nica A.",
                           style: TextStyle(fontWeight: FontWeight.bold)),
-                      Text("Occaecat laboris cupidatat dolo",
+                      Text("Wow",
                           style: TextStyle(color: Colors.grey)),
                     ],
                   ),

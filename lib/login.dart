@@ -16,17 +16,21 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  // Controls whether the password field shows the text or hides it
   bool _obscurePassword = true;
 
+  // Text controllers for username and password input fields
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
+    // Test connection to the backend server on widget initialization
     _testConnection();
   }
 
+  // Test connection method to check server availability
   void _testConnection() async {
     try {
       final response = await http.get(Uri.parse(AppConfig.baseUrl));
@@ -39,12 +43,15 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Access language preference (Filipino or English) from provider
     final isFilipino = Provider.of<LanguageModel>(context).isFilipino();
+    // Access background color scheme from provider
     final backgroundModel = Provider.of<Backgroundmodel>(context);
+
     return Scaffold(
-      backgroundColor: backgroundModel.accent,
+      backgroundColor: backgroundModel.accent, // Set background color
       body: Center(
-        child: SingleChildScrollView(
+        child: SingleChildScrollView( // Makes content scrollable on small screens
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Column(
@@ -52,12 +59,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 Container(
                   padding: EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
+                    color: Colors.white, // White card background
+                    borderRadius: BorderRadius.circular(16), // Rounded corners
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Greeting text
                       Text(
                         "Hello.",
                         style: TextStyle(
@@ -66,6 +74,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                       SizedBox(height: 5),
+                      // Welcome message based on selected language
                       Text(
                         isFilipino ? "Maligayang pagdating" : "Welcome back",
                         style: TextStyle(
@@ -75,40 +84,42 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       SizedBox(height: 20),
 
-                      // Username Field
+                      // Username label
                       Text(
                         "User name",
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                       SizedBox(height: 5),
+
+                      // Username input field
                       TextField(
-                        controller:
-                            _usernameController, //TextController for username
+                        controller: _usernameController,
                         decoration: InputDecoration(
                           hintText: isFilipino
                               ? "Ilagay ang User name"
                               : "Enter User name",
                           prefixIcon: Icon(Icons.person),
                           filled: true,
-                          fillColor: Colors.grey[200],
+                          fillColor: Colors.grey[200], // Light background fill
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
-                            borderSide: BorderSide.none,
+                            borderSide: BorderSide.none, // No border lines
                           ),
                         ),
                       ),
                       SizedBox(height: 15),
 
-                      // Password Field
+                      // Password label
                       Text(
                         "Password",
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                       SizedBox(height: 5),
+
+                      // Password input field with toggle visibility
                       TextField(
-                        controller:
-                            _passwordController, //TextController for password
-                        obscureText: _obscurePassword,
+                        controller: _passwordController,
+                        obscureText: _obscurePassword, // Hide or show password
                         decoration: InputDecoration(
                           hintText: isFilipino
                               ? "Ilagay ang Password"
@@ -121,6 +132,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   : Icons.visibility,
                             ),
                             onPressed: () {
+                              // Toggle password visibility state
                               setState(() {
                                 _obscurePassword = !_obscurePassword;
                               });
@@ -136,11 +148,13 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       SizedBox(height: 5),
 
-                      // Forgot Password
+                      // "Forgot password" link aligned to right
                       Align(
                         alignment: Alignment.centerRight,
                         child: TextButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            // TODO: Implement forgot password functionality
+                          },
                           child: Text(
                             isFilipino
                                 ? "Nakalimutan ang password?"
@@ -151,9 +165,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       SizedBox(height: 15),
 
-                      // Login Button
+                      // Login button
                       SizedBox(
-                        width: double.infinity,
+                        width: double.infinity, // Full width button
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: backgroundModel.button,
@@ -163,24 +177,25 @@ class _LoginScreenState extends State<LoginScreen> {
                             padding: EdgeInsets.symmetric(vertical: 14),
                           ),
                           onPressed: () async {
+                            // Validate empty fields before submitting
                             if (_usernameController.text.isEmpty ||
                                 _passwordController.text.isEmpty) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                    content: Text(isFilipino
-                                        ? "Pakitapos ang lahat ng fields."
-                                        : "Please complete all fields.")),
+                                  content: Text(isFilipino
+                                      ? "Pakitapos ang lahat ng fields."
+                                      : "Please complete all fields."),
+                                ),
                               );
                               return;
                             }
 
                             try {
+                              // POST request to login API endpoint
                               final response = await http.post(
-                                Uri.parse(
-                                    '${AppConfig.baseUrl}/api/auth/login'),
+                                Uri.parse('${AppConfig.baseUrl}/api/auth/login'),
                                 headers: {
-                                  'Content-Type':
-                                      'application/json; charset=UTF-8',
+                                  'Content-Type': 'application/json; charset=UTF-8',
                                 },
                                 body: jsonEncode({
                                   'username': _usernameController.text,
@@ -189,28 +204,27 @@ class _LoginScreenState extends State<LoginScreen> {
                               );
 
                               if (response.statusCode == 200) {
+                                // Parse response JSON
                                 final responseData = jsonDecode(response.body);
                                 final userId = responseData['user']['id'];
-                                final username =
-                                    responseData['user']['username'];
+                                final username = responseData['user']['username'];
                                 final email = responseData['user']['email'];
 
-                                final prefs =
-                                    await SharedPreferences.getInstance();
+                                // Save user info locally using shared preferences
+                                final prefs = await SharedPreferences.getInstance();
                                 await prefs.setInt('user_id', userId);
-                                await prefs.setString(
-                                    'user_name', username ?? 'User Name');
-                                await prefs.setString(
-                                    'user_email', email ?? 'user@example.com');
+                                await prefs.setString('user_name', username ?? 'User Name');
+                                await prefs.setString('user_email', email ?? 'user@example.com');
 
                                 if (!mounted) return;
 
+                                // Navigate to HomeScreen after successful login
                                 Navigator.pushReplacement(
                                   context,
-                                  MaterialPageRoute(
-                                      builder: (context) => HomeScreen()),
+                                  MaterialPageRoute(builder: (context) => HomeScreen()),
                                 );
                               } else {
+                                // Show error if login credentials are invalid
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                     content: Text(isFilipino
@@ -220,6 +234,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 );
                               }
                             } catch (e) {
+                              // Show error if connection fails
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(isFilipino
@@ -240,10 +255,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       SizedBox(height: 15),
 
-                      // Sign Up
+                      // Sign up prompt for users without account
                       Center(
                         child: TextButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            // TODO: Implement sign up navigation
+                          },
                           child: RichText(
                             text: TextSpan(
                               text: isFilipino
