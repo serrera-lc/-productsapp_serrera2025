@@ -94,7 +94,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> loadUserInfo() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      userName = prefs.getString('user_name') ?? 'User Name';
+      userName = prefs.getString('user_name') ?? 'UserName';
       userEmail = prefs.getString('user_email') ?? 'user@example.com';
     });
   }
