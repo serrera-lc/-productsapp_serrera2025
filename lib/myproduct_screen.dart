@@ -4,6 +4,7 @@ import 'dart:convert'; // JSON decoding
 import 'models/Products.dart'; // Product model
 import 'editproduct_screen.dart'; // Screen for editing a product
 import 'config.dart'; // App config including base URL
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MyProductsScreen extends StatefulWidget {
   final int userId; // User ID whose products will be fetched
@@ -16,7 +17,8 @@ class MyProductsScreen extends StatefulWidget {
 
 class _MyProductsScreenState extends State<MyProductsScreen> {
   List<Product> _products = []; // List of products loaded
-  Set<int> _selectedProductIds = {}; // Set of selected product IDs for bulk actions
+  Set<int> _selectedProductIds =
+      {}; // Set of selected product IDs for bulk actions
 
   @override
   void initState() {
@@ -26,11 +28,13 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
 
   // Fetch products for the current user from API
   Future<void> _fetchProducts() async {
-    final response = await http
-        .get(Uri.parse('${AppConfig.baseUrl}/api/products/${widget.userId}'));
+    final prefs = await SharedPreferences.getInstance();
+    final userId = prefs.getInt('user_id');
+    if (userId == null) return;
+    final response =
+        await http.get(Uri.parse('${AppConfig.baseUrl}/api/products/$userId'));
     if (response.statusCode == 200) {
       final body = json.decode(response.body);
-      // If API returns a Map with 'data' field, use it; else wrap single product in list
       final List<dynamic> data =
           body is Map && body['data'] != null ? body['data'] : [body];
       setState(() {
@@ -66,9 +70,11 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
         content: Text('Are you sure you want to delete the selected products?'),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context, false), child: Text('No')),
+              onPressed: () => Navigator.pop(context, false),
+              child: Text('No')),
           TextButton(
-              onPressed: () => Navigator.pop(context, true), child: Text('Yes')),
+              onPressed: () => Navigator.pop(context, true),
+              child: Text('Yes')),
         ],
       ),
     );
@@ -115,65 +121,182 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
             ),
         ],
       ),
-      // ListView to display products
-      body: ListView.builder(
-        itemCount: _products.length,
-        itemBuilder: (context, index) {
-          final product = _products[index];
-          final isSelected = _selectedProductIds.contains(product.id);
-          return ListTile(
-            // Long press triggers delete confirmation for this product
-            onLongPress: () async {
-              final confirm = await showDialog<bool>(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: Text('Delete Product'),
-                  content:
-                      Text('Are you sure you want to delete "${product.name}"?'),
-                  actions: [
-                    TextButton(
-                        onPressed: () => Navigator.pop(context, false),
-                        child: Text('No')),
-                    TextButton(
-                        onPressed: () => Navigator.pop(context, true),
-                        child: Text('Yes')),
-                  ],
+      // Stack for wave background and main content
+      body: Stack(
+        children: [
+          // Decorative wave/gradient background
+          Positioned(
+            top: -100,
+            left: 0,
+            right: 0,
+            child: Container(
+              height: 300,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.blue, Colors.transparent],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
                 ),
-              );
-              if (confirm == true) {
-                await _deleteProduct(product.id);
-              }
-            },
-            // Checkbox to select/unselect product for bulk actions
-            leading: Checkbox(
-              value: isSelected,
-              onChanged: (bool? selected) {
-                setState(() {
-                  if (selected == true) {
-                    _selectedProductIds.add(product.id);
-                  } else {
-                    _selectedProductIds.remove(product.id);
-                  }
-                });
-              },
+              ),
             ),
-            title: Text(product.name), // Product name
-            subtitle: Text(product.description), // Product description
-            trailing: IconButton(
-              icon: Icon(Icons.edit),
-              onPressed: () {
-                // Navigate to edit screen on edit button tap
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => EditProductScreen(product: product),
+          ),
+          // Main content wrapped in a Card with glassmorphism
+          SingleChildScrollView(
+            child: Container(
+              padding: EdgeInsets.all(16),
+              child: Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                elevation: 8,
+                child: ClipPath(
+                  clipper: WaveClipper(),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.8),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'My Products',
+                            style: Theme.of(context).textTheme.headlineSmall,
+                          ),
+                          SizedBox(height: 16),
+                          // ListView to display products
+                          Column(
+                            children: _products.map((product) {
+                              final isSelected =
+                                  _selectedProductIds.contains(product.id);
+                              return Card(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                margin: EdgeInsets.only(bottom: 16),
+                                elevation: 4,
+                                child: ListTile(
+                                  // Long press triggers delete confirmation for this product
+                                  onLongPress: () async {
+                                    final confirm = await showDialog<bool>(
+                                      context: context,
+                                      builder: (context) => AlertDialog(
+                                        title: Text('Delete Product'),
+                                        content: Text(
+                                            'Are you sure you want to delete "${product.name}"?'),
+                                        actions: [
+                                          TextButton(
+                                              onPressed: () =>
+                                                  Navigator.pop(context, false),
+                                              child: Text('No')),
+                                          TextButton(
+                                              onPressed: () =>
+                                                  Navigator.pop(context, true),
+                                              child: Text('Yes')),
+                                        ],
+                                      ),
+                                    );
+                                    if (confirm == true) {
+                                      await _deleteProduct(product.id);
+                                    }
+                                  },
+                                  // Checkbox to select/unselect product for bulk actions
+                                  leading: Checkbox(
+                                    value: isSelected,
+                                    onChanged: (bool? selected) {
+                                      setState(() {
+                                        if (selected == true) {
+                                          _selectedProductIds.add(product.id);
+                                        } else {
+                                          _selectedProductIds
+                                              .remove(product.id);
+                                        }
+                                      });
+                                    },
+                                  ),
+                                  title: Text(product.name), // Product name
+                                  subtitle: Text(product
+                                      .description), // Product description
+                                  trailing: IconButton(
+                                    icon: Icon(Icons.edit),
+                                    onPressed: () {
+                                      // Navigate to edit screen on edit button tap
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              EditProductScreen(
+                                                  product: product),
+                                        ),
+                                      ).then((_) =>
+                                          _fetchProducts()); // Refresh after editing
+                                    },
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                          // Actions section with buttons for delete and edit
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              ElevatedButton(
+                                onPressed: _deleteSelectedProducts,
+                                child: Text('Delete Selected'),
+                                style: ElevatedButton.styleFrom(
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: 24, vertical: 12),
+                                ),
+                              ),
+                              ElevatedButton(
+                                onPressed: _editSelectedProduct,
+                                child: Text('Edit Selected'),
+                                style: ElevatedButton.styleFrom(
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: 24, vertical: 12),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                ).then((_) => _fetchProducts()); // Refresh after editing
-              },
+                ),
+              ),
             ),
-          );
-        },
+          ),
+        ],
       ),
     );
+  }
+}
+
+// Custom clipper for the wave effect
+class WaveClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    var path = Path();
+    path.lineTo(0, size.height - 100);
+    var controlPoint = Offset(size.width / 2, size.height);
+    var endPoint = Offset(size.width, size.height - 100);
+    path.quadraticBezierTo(
+        controlPoint.dx, controlPoint.dy, endPoint.dx, endPoint.dy);
+    path.lineTo(size.width, 0);
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) {
+    return false;
   }
 }

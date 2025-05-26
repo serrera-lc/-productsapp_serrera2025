@@ -149,78 +149,206 @@ class _EditProductScreenState extends State<EditProductScreen> {
       appBar: AppBar(
         title: Text('Edit Product'),
       ),
-      body: Padding(
-        padding: EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            // Image display & picker: shows picked image or existing image or placeholder
-            GestureDetector(
-              onTap: _pickImage,
-              child: _pickedImage != null
-                  ? Image.file(_pickedImage!,
-                      height: 120, width: 120, fit: BoxFit.cover)
-                  : (_currentImagePath != null && _currentImagePath!.isNotEmpty)
-                      ? Image.network(
-                          'http://192.168.145.203:8000/storage/$_currentImagePath',
-                          height: 120,
-                          width: 120,
-                          fit: BoxFit.cover)
-                      : Image.asset('assets/product_placeholder.png',
-                          height: 120, width: 120, fit: BoxFit.cover),
+      body: Stack(
+        children: [
+          // Decorative wave/gradient background
+          Positioned(
+            top: -100,
+            left: -100,
+            child: Container(
+              width: 300,
+              height: 300,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.blue, Colors.transparent],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
             ),
-
-            // Button to change image explicitly
-            TextButton(
-              onPressed: _pickImage,
-              child: Text('Change Image'),
+          ),
+          Positioned(
+            top: -50,
+            right: -50,
+            child: Container(
+              width: 300,
+              height: 300,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.red, Colors.transparent],
+                  begin: Alignment.topRight,
+                  end: Alignment.bottomLeft,
+                ),
+              ),
             ),
+          ),
 
-            // Text input fields for product name, description, and price
-            TextField(
-                controller: _nameController,
-                decoration: InputDecoration(labelText: 'Name')),
-            TextField(
-                controller: _descriptionController,
-                decoration: InputDecoration(labelText: 'Description')),
-            TextField(
-                controller: _priceController,
-                decoration: InputDecoration(labelText: 'Price'),
-                keyboardType: TextInputType.number),
-
-            SizedBox(height: 10),
-
-            // Dropdown for selecting product category, shows loading spinner while fetching categories
-            _isLoadingCategories
-                ? CircularProgressIndicator()
-                : DropdownButtonFormField<String>(
-                    decoration: InputDecoration(
-                      labelText: 'Category',
-                      border: OutlineInputBorder(),
-                    ),
-                    value: _selectedCategoryId,
-                    items: _categories.map((category) {
-                      return DropdownMenuItem<String>(
-                        value: category['id'].toString(),
-                        child: Text(category['name']),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedCategoryId = value;
-                      });
-                    },
+          Padding(
+            padding: EdgeInsets.all(16.0),
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  // Image display & picker: shows picked image or existing image or placeholder
+                  GestureDetector(
+                    onTap: _pickImage,
+                    child: _pickedImage != null
+                        ? ClipRRect(
+                            borderRadius: BorderRadius.circular(16.0),
+                            child: Image.file(_pickedImage!,
+                                height: 120, width: 120, fit: BoxFit.cover),
+                          )
+                        : (_currentImagePath != null &&
+                                _currentImagePath!.isNotEmpty)
+                            ? ClipRRect(
+                                borderRadius: BorderRadius.circular(16.0),
+                                child: Image.network(
+                                    'http://192.168.145.203:8000/storage/$_currentImagePath',
+                                    height: 120,
+                                    width: 120,
+                                    fit: BoxFit.cover),
+                              )
+                            : ClipRRect(
+                                borderRadius: BorderRadius.circular(16.0),
+                                child: Image.asset(
+                                    'assets/product_placeholder.png',
+                                    height: 120,
+                                    width: 120,
+                                    fit: BoxFit.cover),
+                              ),
                   ),
 
-            SizedBox(height: 20),
+                  // Button to change image explicitly
+                  TextButton(
+                    onPressed: _pickImage,
+                    child: Text('Change Image'),
+                  ),
 
-            // Button to submit and update the product
-            ElevatedButton(
-              onPressed: _updateProduct,
-              child: Text('Update'),
+                  // Card or Container with glassmorphism effect for main content
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.8),
+                      borderRadius: BorderRadius.circular(16.0),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 10,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Section title
+                          Text(
+                            'Product Details',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+
+                          SizedBox(height: 16),
+
+                          // Text input fields for product name, description, and price
+                          _buildTextField(
+                              controller: _nameController, label: 'Name'),
+                          SizedBox(height: 16),
+                          _buildTextField(
+                              controller: _descriptionController,
+                              label: 'Description'),
+                          SizedBox(height: 16),
+                          _buildTextField(
+                              controller: _priceController,
+                              label: 'Price',
+                              isNumber: true),
+
+                          SizedBox(height: 16),
+
+                          // Dropdown for selecting product category, shows loading spinner while fetching categories
+                          _isLoadingCategories
+                              ? Center(child: CircularProgressIndicator())
+                              : _buildCategoryDropdown(),
+
+                          SizedBox(height: 24),
+
+                          // Button to submit and update the product
+                          Center(
+                            child: ElevatedButton(
+                              onPressed: _updateProduct,
+                              child: Text('Update'),
+                              style: ElevatedButton.styleFrom(
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: 32, vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16.0),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
+    );
+  }
+
+  // Helper method to build a rounded text field with shadow
+  Widget _buildTextField(
+      {required TextEditingController controller,
+      required String label,
+      bool isNumber = false}) {
+    return TextField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16.0),
+          borderSide: BorderSide.none,
+        ),
+        filled: true,
+        fillColor: Colors.grey[200],
+      ),
+      keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+      style: TextStyle(
+        fontSize: 16,
+        color: Colors.black87,
+      ),
+    );
+  }
+
+  // Helper method to build the category dropdown
+  Widget _buildCategoryDropdown() {
+    return DropdownButtonFormField<String>(
+      decoration: InputDecoration(
+        labelText: 'Category',
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16.0),
+          borderSide: BorderSide.none,
+        ),
+        filled: true,
+        fillColor: Colors.grey[200],
+      ),
+      value: _selectedCategoryId,
+      items: _categories.map((category) {
+        return DropdownMenuItem<String>(
+          value: category['id'].toString(),
+          child: Text(category['name']),
+        );
+      }).toList(),
+      onChanged: (value) {
+        setState(() {
+          _selectedCategoryId = value;
+        });
+      },
     );
   }
 }

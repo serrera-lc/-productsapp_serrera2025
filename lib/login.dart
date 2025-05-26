@@ -30,7 +30,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void _testConnection() async {
     try {
       final response = await http.get(Uri.parse(AppConfig.baseUrl));
-      debugPrint('Status: ${response.statusCode}');
+      debugPrint('Status: [32m${response.statusCode}[0m');
       debugPrint('Body: ${response.body}');
     } catch (e) {
       debugPrint('Connection failed: $e');
@@ -41,167 +41,211 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     final isFilipino = Provider.of<LanguageModel>(context).isFilipino();
     final backgroundModel = Provider.of<Backgroundmodel>(context);
+    final size = MediaQuery.of(context).size;
 
     return Scaffold(
       backgroundColor: backgroundModel.accent,
-      body: Center(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              children: [
-                // App Logo / Avatar
-                CircleAvatar(
-                  radius: 48,
-                  backgroundColor: Colors.white,
-                  child: Icon(Icons.person, size: 48, color: backgroundModel.button),
+      body: Stack(
+        children: [
+          // Top wave
+          Positioned(
+            top: -size.height * 0.18,
+            left: -size.width * 0.2,
+            child: Container(
+              width: size.width * 1.4,
+              height: size.height * 0.4,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [backgroundModel.button, backgroundModel.accent],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-                const SizedBox(height: 20),
-
-                // Card container
-                Container(
-                  padding: EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black12,
-                        blurRadius: 15,
-                        offset: Offset(0, 8),
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(200),
+                  bottomRight: Radius.circular(200),
+                ),
+              ),
+            ),
+          ),
+          // Main content
+          Center(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 28.0, vertical: 12),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // App logo/avatar
+                    Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: backgroundModel.button.withOpacity(0.2),
+                            blurRadius: 30,
+                            offset: Offset(0, 10),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        isFilipino ? "Maligayang pagdating" : "Welcome Back",
-                        style: GoogleFonts.montserrat(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: backgroundModel.button,
-                        ),
+                      child: CircleAvatar(
+                        radius: 54,
+                        backgroundColor: Colors.white,
+                        child: Icon(Icons.shopping_bag,
+                            size: 54, color: backgroundModel.button),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        isFilipino
-                            ? "Pakituloy ang pag-login"
-                            : "Please sign in to continue",
-                        style: TextStyle(color: Colors.grey[700]),
+                    ),
+                    const SizedBox(height: 30),
+                    // Card with glassmorphism effect
+                    Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.all(28),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.85),
+                        borderRadius: BorderRadius.circular(32),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 24,
+                            offset: Offset(0, 12),
+                          ),
+                        ],
+                        border: Border.all(
+                            color: backgroundModel.button.withOpacity(0.08)),
                       ),
-                      const SizedBox(height: 24),
-
-                      // Username
-                      _label("Username", isFilipino),
-                      _inputField(
-                        controller: _usernameController,
-                        hint: isFilipino ? "Ilagay ang User name" : "Enter Username",
-                        icon: Icons.person,
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Password
-                      _label("Password", isFilipino),
-                      _inputField(
-                        controller: _passwordController,
-                        hint: isFilipino ? "Ilagay ang Password" : "Enter Password",
-                        icon: Icons.lock,
-                        obscureText: _obscurePassword,
-                        suffix: IconButton(
-                          icon: Icon(_obscurePassword
-                              ? Icons.visibility_off
-                              : Icons.visibility),
-                          onPressed: () {
-                            setState(() {
-                              _obscurePassword = !_obscurePassword;
-                            });
-                          },
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: TextButton(
-                          onPressed: () {},
-                          child: Text(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
                             isFilipino
-                                ? "Nakalimutan ang password?"
-                                : "Forgot password?",
-                            style: TextStyle(color: backgroundModel.button),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-
-                      // Gradient Login Button
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            elevation: 3,
-                            padding: EdgeInsets.symmetric(vertical: 14),
-                            backgroundColor: backgroundModel.button,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          onPressed: _handleLogin,
-                          child: Text(
-                            isFilipino ? "Mag-sign In" : "Sign In",
+                                ? "Maligayang Pagbabalik!"
+                                : "Welcome Back!",
                             style: GoogleFonts.montserrat(
-                              fontSize: 16,
+                              fontSize: 28,
                               fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                              color: backgroundModel.button,
                             ),
                           ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 16),
-                      Center(
-                        child: TextButton(
-                          onPressed: () {},
-                          child: RichText(
-                            text: TextSpan(
-                              text: isFilipino
-                                  ? "Walang account? "
-                                  : "Don't have an account? ",
-                              style: TextStyle(color: Colors.black),
-                              children: [
-                                TextSpan(
-                                  text: isFilipino ? "Mag-sign up" : "Sign up",
+                          const SizedBox(height: 6),
+                          Text(
+                            isFilipino
+                                ? "Mag-login upang magpatuloy"
+                                : "Sign in to continue",
+                            style: TextStyle(
+                                color: Colors.grey[700], fontSize: 15),
+                          ),
+                          const SizedBox(height: 28),
+                          // Username
+                          _label(isFilipino ? "Pangalan ng User" : "Username"),
+                          _inputField(
+                            controller: _usernameController,
+                            hint: isFilipino
+                                ? "Ilagay ang User name"
+                                : "Enter Username",
+                            icon: Icons.person,
+                          ),
+                          const SizedBox(height: 18),
+                          // Password
+                          _label(isFilipino ? "Lihim na salita" : "Password"),
+                          _inputField(
+                            controller: _passwordController,
+                            hint: isFilipino
+                                ? "Ilagay ang Password"
+                                : "Enter Password",
+                            icon: Icons.lock,
+                            obscureText: _obscurePassword,
+                            suffix: IconButton(
+                              icon: Icon(_obscurePassword
+                                  ? Icons.visibility_off
+                                  : Icons.visibility),
+                              onPressed: () {
+                                setState(() {
+                                  _obscurePassword = !_obscurePassword;
+                                });
+                              },
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
+                              onPressed: () {},
+                              child: Text(
+                                isFilipino
+                                    ? "Nakalimutan ang password?"
+                                    : "Forgot password?",
+                                style: TextStyle(
+                                    color: backgroundModel.button,
+                                    fontWeight: FontWeight.w500),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 18),
+                          // Gradient Login Button
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                elevation: 4,
+                                padding: EdgeInsets.symmetric(vertical: 16),
+                                backgroundColor: backgroundModel.button,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                              ),
+                              onPressed: _handleLogin,
+                              child: Text(
+                                isFilipino ? "Mag-sign In" : "Sign In",
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 18),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                isFilipino
+                                    ? "Walang account? "
+                                    : "Don't have an account? ",
+                                style: TextStyle(
+                                    color: Colors.black87, fontSize: 15),
+                              ),
+                              GestureDetector(
+                                onTap: () {},
+                                child: Text(
+                                  isFilipino ? "Mag-sign up" : "Sign up",
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     color: backgroundModel.button,
+                                    fontSize: 15,
                                   ),
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
-                        ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
 
   // Label Widget
-  Widget _label(String label, bool isFilipino) {
+  Widget _label(String label) {
     return Text(
-      isFilipino && label == "User name"
-          ? "Pangalan ng User"
-          : isFilipino && label == "Password"
-              ? "Lihim na salita"
-              : label,
-      style: GoogleFonts.montserrat(fontWeight: FontWeight.w600),
+      label,
+      style: GoogleFonts.montserrat(fontWeight: FontWeight.w600, fontSize: 15),
     );
   }
 
@@ -213,19 +257,33 @@ class _LoginScreenState extends State<LoginScreen> {
     Widget? suffix,
     bool obscureText = false,
   }) {
-    return TextField(
-      controller: controller,
-      obscureText: obscureText,
-      decoration: InputDecoration(
-        hintText: hint,
-        prefixIcon: Icon(icon, color: Colors.grey[700]),
-        suffixIcon: suffix,
-        filled: true,
-        fillColor: Colors.grey[100],
-        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
+    return Container(
+      margin: EdgeInsets.only(top: 4),
+      decoration: BoxDecoration(
+        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: TextField(
+        controller: controller,
+        obscureText: obscureText,
+        decoration: InputDecoration(
+          hintText: hint,
+          prefixIcon: Icon(icon, color: Colors.grey[700]),
+          suffixIcon: suffix,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+          filled: true,
+          fillColor: Colors.transparent,
+          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         ),
       ),
     );
@@ -233,7 +291,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   // Login Handler
   void _handleLogin() async {
-    final isFilipino = Provider.of<LanguageModel>(context, listen: false).isFilipino();
+    final isFilipino =
+        Provider.of<LanguageModel>(context, listen: false).isFilipino();
 
     if (_usernameController.text.isEmpty || _passwordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -271,18 +330,16 @@ class _LoginScreenState extends State<LoginScreen> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(isFilipino
-                ? "Maling kredensyal."
-                : "Invalid credentials."),
+            content: Text(
+                isFilipino ? "Maling kredensyal." : "Invalid credentials."),
           ),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(isFilipino
-              ? "May problema sa koneksyon."
-              : "Connection error."),
+          content: Text(
+              isFilipino ? "May problema sa koneksyon." : "Connection error."),
         ),
       );
     }

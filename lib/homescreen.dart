@@ -57,10 +57,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> loadProducts() async {
     try {
-      final response = await http.get(Uri.parse('${AppConfig.baseUrl}/api/products?all=1'));
+      final response =
+          await http.get(Uri.parse('${AppConfig.baseUrl}/api/products?all=1'));
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
-        List<Map<String, dynamic>> fetched = List<Map<String, dynamic>>.from(jsonData['data'] ?? jsonData);
+        List<Map<String, dynamic>> fetched =
+            List<Map<String, dynamic>>.from(jsonData['data'] ?? jsonData);
         fetched.shuffle(Random());
         setState(() {
           allProducts = fetched;
@@ -75,15 +77,18 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> loadCategories() async {
     try {
-      final response = await http.get(Uri.parse('${AppConfig.baseUrl}/api/categories'));
+      final response =
+          await http.get(Uri.parse('${AppConfig.baseUrl}/api/categories'));
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
         setState(() {
-          categories = data.map<Map<String, dynamic>>((item) => {
-            'id': item['id'],
-            'name': item['name'],
-            'image_path': item['image_path'],
-          }).toList();
+          categories = data
+              .map<Map<String, dynamic>>((item) => {
+                    'id': item['id'],
+                    'name': item['name'],
+                    'image_path': item['image_path'],
+                  })
+              .toList();
         });
       }
     } catch (e) {
@@ -107,9 +112,11 @@ class _HomeScreenState extends State<HomeScreen> {
         itemCount: items.length,
         itemBuilder: (context, index) {
           final product = items[index];
-          if (excludeIds != null && excludeIds.contains(product['id'])) return SizedBox.shrink();
+          if (excludeIds != null && excludeIds.contains(product['id']))
+            return SizedBox.shrink();
 
-          final imagePath = product['image_path'] != null && product['image_path'].toString().isNotEmpty
+          final imagePath = product['image_path'] != null &&
+                  product['image_path'].toString().isNotEmpty
               ? '${AppConfig.baseUrl}/storage/${product['image_path']}'
               : 'assets/product_placeholder.png';
 
@@ -118,7 +125,8 @@ class _HomeScreenState extends State<HomeScreen> {
             child: GestureDetector(
               onTap: () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => ProductDetailsScreen(product: product)),
+                MaterialPageRoute(
+                    builder: (_) => ProductDetailsScreen(product: product)),
               ),
               child: Container(
                 width: 160,
@@ -137,7 +145,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     ClipRRect(
-                      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                      borderRadius:
+                          BorderRadius.vertical(top: Radius.circular(16)),
                       child: Image.network(
                         imagePath,
                         height: 120,
@@ -157,7 +166,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         product['name']?.toString() ?? '',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 14),
                       ),
                     ),
                     Padding(
@@ -174,7 +184,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       padding: const EdgeInsets.all(8.0),
                       child: Text(
                         '₱${product['price']?.toString() ?? ''}',
-                        style: TextStyle(fontSize: 14, color: Colors.orange[800], fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.orange[800],
+                            fontWeight: FontWeight.w600),
                       ),
                     ),
                   ],
@@ -210,7 +223,8 @@ class _HomeScreenState extends State<HomeScreen> {
     if (idx >= recs.length) return SizedBox.shrink();
 
     final product = recs[idx];
-    final imagePath = product['image_path'] != null && product['image_path'].toString().isNotEmpty
+    final imagePath = product['image_path'] != null &&
+            product['image_path'].toString().isNotEmpty
         ? '${AppConfig.baseUrl}/storage/${product['image_path']}'
         : 'assets/product_placeholder.png';
 
@@ -221,7 +235,8 @@ class _HomeScreenState extends State<HomeScreen> {
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
-            BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(2, 4)),
+            BoxShadow(
+                color: Colors.black12, blurRadius: 6, offset: Offset(2, 4)),
           ],
         ),
         child: Column(
@@ -265,7 +280,10 @@ class _HomeScreenState extends State<HomeScreen> {
               padding: const EdgeInsets.all(8.0),
               child: Text(
                 '₱${product['price']?.toString() ?? ''}',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.orange[800]),
+                style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.orange[800]),
               ),
             ),
           ],
@@ -310,7 +328,8 @@ class _HomeScreenState extends State<HomeScreen> {
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
-              BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, 4)),
+              BoxShadow(
+                  color: Colors.black12, blurRadius: 8, offset: Offset(0, 4)),
             ],
           ),
           padding: EdgeInsets.all(12),
@@ -333,7 +352,8 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         backgroundColor: backgroundModel.appBar,
         elevation: 0,
-        title: Text("Welcome", style: TextStyle(color: Colors.black)),
+        title: Text(isFilipino ? "Maligayang pagdating" : "Welcome",
+            style: TextStyle(color: Colors.black)),
         actions: [
           Icon(Icons.notifications_none, color: Colors.black),
           SizedBox(width: 15),
@@ -350,22 +370,29 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CircleAvatar(backgroundImage: AssetImage("assets/profile.jpg"), radius: 30),
+                  CircleAvatar(
+                      backgroundImage: AssetImage("assets/profile.jpg"),
+                      radius: 30),
                   SizedBox(height: 10),
-                  Text(userName ?? "User Name", style: TextStyle(fontSize: 18, color: Colors.white)),
-                  Text(userEmail ?? "user@example.com", style: TextStyle(fontSize: 14, color: Colors.white70)),
+                  Text(
+                      userName ??
+                          (isFilipino ? "Pangalan ng User" : "User Name"),
+                      style: TextStyle(fontSize: 18, color: Colors.white)),
+                  Text(userEmail ?? "user@example.com",
+                      style: TextStyle(fontSize: 14, color: Colors.white70)),
                 ],
               ),
             ),
             ListTile(
               leading: Icon(Icons.home),
-              title: Text('Home'),
+              title: Text(isFilipino ? "Home" : "Home"),
               onTap: () => Navigator.pop(context),
             ),
             ListTile(
               leading: Icon(Icons.add_box),
               title: Text(isFilipino ? "Magdagdag ng Produkto" : 'Add Product'),
-              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AddProductScreen())),
+              onTap: () => Navigator.push(context,
+                  MaterialPageRoute(builder: (_) => AddProductScreen())),
             ),
             ListTile(
               leading: Icon(Icons.inventory),
@@ -375,55 +402,75 @@ class _HomeScreenState extends State<HomeScreen> {
                 final prefs = await SharedPreferences.getInstance();
                 final userId = prefs.getInt('user_id');
                 if (userId != null) {
-                  Navigator.push(context, MaterialPageRoute(builder: (_) => MyProductsScreen(userId: userId)));
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => MyProductsScreen(userId: userId)));
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(isFilipino ? "Walang naka-log in na user." : "No user logged in.")),
+                    SnackBar(
+                        content: Text(isFilipino
+                            ? "Walang naka-log in na user."
+                            : "No user logged in.")),
                   );
                 }
               },
             ),
             ListTile(
               leading: Icon(Icons.settings),
-              title: Text('Settings'),
-              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => SettingsScreen())),
+              title: Text(isFilipino ? "Mga Setting" : 'Settings'),
+              onTap: () => Navigator.push(
+                  context, MaterialPageRoute(builder: (_) => SettingsScreen())),
             ),
             ListTile(
               leading: Icon(Icons.logout),
               title: Text(isFilipino ? "Mag-Logout" : 'Logout'),
-              onTap: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => LoginScreen())),
+              onTap: () => Navigator.pushReplacement(
+                  context, MaterialPageRoute(builder: (_) => LoginScreen())),
             ),
           ],
         ),
       ),
       body: isLoading
           ? Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(height: 20),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: Image.asset("assets/banner.jpg", height: 250, width: double.infinity, fit: BoxFit.cover),
-                  ),
-                  SizedBox(height: 20),
-                  sectionTitle(isFilipino ? "Mga Produkto" : "Products"),
-                  productList(productsSection),
-                  sectionTitleWithAction(
-                    isFilipino ? "Pinakamabenta" : "Best Seller",
-                    isFilipino ? "Ipakita lahat >" : "See all >",
-                  ),
-                  productList(bestSellersSection),
-                  sectionTitle(isFilipino ? "Mga Kategorya" : "Categories"),
-                  categoryGrid(),
-                  sectionTitle(isFilipino ? "Inirerekomenda para sa iyo" : "Recommended for you"),
-                  recommendedGrid(allProducts),
-                  trendingProductsSection(allProducts),
-                  hotDealsSection(allProducts),
-                  SizedBox(height: 20),
-                ],
+          : RefreshIndicator(
+              onRefresh: () async {
+                await loadProducts();
+                await loadCategories();
+              },
+              child: SingleChildScrollView(
+                physics: AlwaysScrollableScrollPhysics(),
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(height: 20),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: Image.asset("assets/banner.jpg",
+                          height: 250,
+                          width: double.infinity,
+                          fit: BoxFit.cover),
+                    ),
+                    SizedBox(height: 20),
+                    sectionTitle(isFilipino ? "Mga Produkto" : "Products"),
+                    productList(productsSection),
+                    sectionTitleWithAction(
+                      isFilipino ? "Pinakamabenta" : "Best Seller",
+                      isFilipino ? "Ipakita lahat >" : "See all >",
+                    ),
+                    productList(bestSellersSection),
+                    sectionTitle(isFilipino ? "Mga Kategorya" : "Categories"),
+                    categoryGrid(),
+                    sectionTitle(isFilipino
+                        ? "Inirerekomenda para sa iyo"
+                        : "Recommended for you"),
+                    recommendedGrid(allProducts),
+                    trendingProductsSection(allProducts),
+                    hotDealsSection(allProducts),
+                    SizedBox(height: 20),
+                  ],
+                ),
               ),
             ),
     );
@@ -435,20 +482,24 @@ class _HomeScreenState extends State<HomeScreen> {
       children: [
         Text(
           title,
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.black87),
+          style: TextStyle(
+              fontSize: 20, fontWeight: FontWeight.w600, color: Colors.black87),
         ),
         SizedBox(height: 6),
         Container(
           height: 3,
           width: 30,
-          decoration: BoxDecoration(color: Colors.deepOrangeAccent, borderRadius: BorderRadius.circular(2)),
+          decoration: BoxDecoration(
+              color: Colors.deepOrangeAccent,
+              borderRadius: BorderRadius.circular(2)),
         ),
         SizedBox(height: 14),
       ],
     );
   }
 
-  Widget sectionTitleWithAction(String title, String actionText, {VoidCallback? onActionTap}) {
+  Widget sectionTitleWithAction(String title, String actionText,
+      {VoidCallback? onActionTap}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
@@ -456,7 +507,10 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           Text(
             title,
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.black87),
+            style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87),
           ),
           InkWell(
             onTap: onActionTap,
@@ -465,7 +519,10 @@ class _HomeScreenState extends State<HomeScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               child: Text(
                 actionText,
-                style: TextStyle(color: Colors.deepOrangeAccent, fontSize: 14, fontWeight: FontWeight.w500),
+                style: TextStyle(
+                    color: Colors.deepOrangeAccent,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500),
               ),
             ),
           ),
@@ -475,8 +532,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget categoryGrid() {
-    final List<Map<String, dynamic>> shuffled = List<Map<String, dynamic>>.from(categories)..shuffle();
-    final List<Map<String, dynamic>> displayCategories = shuffled.take(4).toList();
+    final List<Map<String, dynamic>> shuffled =
+        List<Map<String, dynamic>>.from(categories)..shuffle();
+    final List<Map<String, dynamic>> displayCategories =
+        shuffled.take(4).toList();
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: GridView.builder(
@@ -491,12 +550,14 @@ class _HomeScreenState extends State<HomeScreen> {
         itemCount: displayCategories.length,
         itemBuilder: (context, index) {
           final cat = displayCategories[index];
-          String imagePath = cat['image_path'] != null && cat['image_path'].toString().isNotEmpty
+          String imagePath = cat['image_path'] != null &&
+                  cat['image_path'].toString().isNotEmpty
               ? '${AppConfig.baseUrl}/storage/${cat['image_path']}'
               : 'assets/product_placeholder.png';
           return Card(
             elevation: 2,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             child: InkWell(
               borderRadius: BorderRadius.circular(12),
               onTap: () {
@@ -523,12 +584,14 @@ class _HomeScreenState extends State<HomeScreen> {
                         width: 200,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) =>
-                            Image.asset('assets/product_placeholder.png', height: 60, width: 90, fit: BoxFit.cover),
+                            Image.asset('assets/product_placeholder.png',
+                                height: 60, width: 90, fit: BoxFit.cover),
                       ),
                     ),
                     SizedBox(height: 8),
                     Text(cat['name'] ?? '',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 14),
                         textAlign: TextAlign.center,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis),

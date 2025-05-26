@@ -1,4 +1,4 @@
-package com.example.morales_productsapp2025
+package com.example.serrera_productsapp2025
 
 import io.flutter.embedding.android.FlutterActivity
 
