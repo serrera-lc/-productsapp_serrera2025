@@ -80,8 +80,8 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
     );
 
     if (confirm == true) {
-      // Delete products one by one
-      for (var id in _selectedProductIds) {
+      // Delete products one by one (iterate over a copy to avoid ConcurrentModificationError)
+      for (var id in _selectedProductIds.toList()) {
         await _deleteProduct(id);
       }
     }
