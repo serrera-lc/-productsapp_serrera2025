@@ -31,11 +31,11 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    loadProducts();
-    loadCategories();
-    loadUserInfo();
+    loadProducts(); // Load all products from API
+    loadCategories(); // Load categories from API
+    loadUserInfo(); // Load user info from shared preferences
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      showWelcomeDialog();
+      showWelcomeDialog(); // Show welcome dialog after build
     });
   }
 
@@ -63,14 +63,14 @@ class _HomeScreenState extends State<HomeScreen> {
         final jsonData = jsonDecode(response.body);
         List<Map<String, dynamic>> fetched =
             List<Map<String, dynamic>>.from(jsonData['data'] ?? jsonData);
-        fetched.shuffle(Random());
+        fetched.shuffle(Random()); // Shuffle products for randomness
         setState(() {
-          allProducts = fetched;
-          isLoading = false;
+          allProducts = fetched; // Store products
+          isLoading = false; // Stop loading indicator
         });
       }
     } catch (e) {
-      print('Failed to load products: $e');
+      print('Failed to load products: $e'); // Log error
       setState(() => isLoading = false);
     }
   }
@@ -88,19 +88,20 @@ class _HomeScreenState extends State<HomeScreen> {
                     'name': item['name'],
                     'image_path': item['image_path'],
                   })
-              .toList();
+              .toList(); // Store categories
         });
       }
     } catch (e) {
-      print('Failed to load categories: $e');
+      print('Failed to load categories: $e'); // Log error
     }
   }
 
   Future<void> loadUserInfo() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      userName = prefs.getString('user_name') ?? 'UserName';
-      userEmail = prefs.getString('user_email') ?? 'user@example.com';
+      userName = prefs.getString('user_name') ?? 'UserName'; // Get user name
+      userEmail =
+          prefs.getString('user_email') ?? 'user@example.com'; // Get user email
     });
   }
 
@@ -113,12 +114,12 @@ class _HomeScreenState extends State<HomeScreen> {
         itemBuilder: (context, index) {
           final product = items[index];
           if (excludeIds != null && excludeIds.contains(product['id']))
-            return SizedBox.shrink();
+            return SizedBox.shrink(); // Exclude certain products
 
           final imagePath = product['image_path'] != null &&
                   product['image_path'].toString().isNotEmpty
               ? '${AppConfig.baseUrl}/storage/${product['image_path']}'
-              : 'assets/product_placeholder.png';
+              : 'assets/product_placeholder.png'; // Product image fallback
 
           return Padding(
             padding: EdgeInsets.only(right: 12),
@@ -126,7 +127,8 @@ class _HomeScreenState extends State<HomeScreen> {
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (_) => ProductDetailsScreen(product: product)),
+                    builder: (_) => ProductDetailsScreen(
+                        product: product)), // Go to product details
               ),
               child: Container(
                 width: 160,
@@ -167,7 +169,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 14),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14), // Product name style
                       ),
                     ),
                     Padding(
@@ -176,7 +179,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         product['description']?.toString() ?? '',
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+                        style: TextStyle(
+                            fontSize: 12,
+                            color:
+                                Colors.grey[700]), // Product description style
                       ),
                     ),
                     Spacer(),
@@ -187,7 +193,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         style: TextStyle(
                             fontSize: 14,
                             color: Colors.orange[800],
-                            fontWeight: FontWeight.w600),
+                            fontWeight: FontWeight.w600), // Product price style
                       ),
                     ),
                   ],
@@ -202,8 +208,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget recommendedGrid(List<Map<String, dynamic>> items) {
     final random = Random();
-    final recommended = List<Map<String, dynamic>>.from(items)..shuffle(random);
-    final recs = recommended.take(4).toList();
+    final recommended = List<Map<String, dynamic>>.from(items)
+      ..shuffle(random); // Shuffle for recommendations
+    final recs = recommended.take(4).toList(); // Take 4 recommended
 
     return GridView.builder(
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -220,7 +227,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildRecommendedCard(List<Map<String, dynamic>> recs, int idx) {
-    if (idx >= recs.length) return SizedBox.shrink();
+    if (idx >= recs.length) return SizedBox.shrink(); // Guard for index
 
     final product = recs[idx];
     final imagePath = product['image_path'] != null &&
@@ -229,7 +236,7 @@ class _HomeScreenState extends State<HomeScreen> {
         : 'assets/product_placeholder.png';
 
     return GestureDetector(
-      onTap: () => _navigateToProductInfo(recs, idx),
+      onTap: () => _navigateToProductInfo(recs, idx), // Go to product info
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
@@ -297,26 +304,30 @@ class _HomeScreenState extends State<HomeScreen> {
     final product = list[idx];
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => ProductDetailsScreen(product: product)),
+      MaterialPageRoute(
+          builder: (_) =>
+              ProductDetailsScreen(product: product)), // Go to product details
     );
   }
 
   Widget trendingProductsSection(List<Map<String, dynamic>> items) {
     final random = Random();
-    final trending = List<Map<String, dynamic>>.from(items)..shuffle(random);
+    final trending = List<Map<String, dynamic>>.from(items)
+      ..shuffle(random); // Shuffle for trending
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         sectionTitle('Trending Products'),
-        productList(trending.take(8).toList()),
+        productList(trending.take(8).toList()), // Show 8 trending products
       ],
     );
   }
 
   Widget hotDealsSection(List<Map<String, dynamic>> items) {
     final random = Random();
-    final hotDeals = List<Map<String, dynamic>>.from(items)..shuffle(random);
-    final recs = hotDeals.take(4).toList();
+    final hotDeals = List<Map<String, dynamic>>.from(items)
+      ..shuffle(random); // Shuffle for hot deals
+    final recs = hotDeals.take(4).toList(); // Take 4 hot deals
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -341,19 +352,21 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isFilipino = Provider.of<LanguageModel>(context).isFilipino();
-    final backgroundModel = Provider.of<Backgroundmodel>(context);
+    final isFilipino =
+        Provider.of<LanguageModel>(context).isFilipino(); // Language check
+    final backgroundModel =
+        Provider.of<Backgroundmodel>(context); // Theme/background
     int split = (allProducts.length / 2).ceil();
-    final productsSection = allProducts.take(split).toList();
-    final bestSellersSection = allProducts.skip(split).toList();
+    final productsSection = allProducts.take(split).toList(); // First half
+    final bestSellersSection = allProducts.skip(split).toList(); // Second half
 
     return Scaffold(
       backgroundColor: Color(0xFFF5F6FA),
       appBar: AppBar(
-        backgroundColor: backgroundModel.appBar,
+        backgroundColor: backgroundModel.appBar, // Dynamic app bar color
         elevation: 0,
         title: Text(isFilipino ? "Maligayang pagdating" : "Welcome",
-            style: TextStyle(color: Colors.black)),
+            style: TextStyle(color: Colors.black)), // Localized title
         actions: [
           Icon(Icons.notifications_none, color: Colors.black),
           SizedBox(width: 15),
@@ -366,7 +379,8 @@ class _HomeScreenState extends State<HomeScreen> {
           padding: EdgeInsets.zero,
           children: [
             DrawerHeader(
-              decoration: BoxDecoration(color: backgroundModel.appBar),
+              decoration: BoxDecoration(
+                  color: backgroundModel.appBar), // Drawer header color
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -377,9 +391,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   Text(
                       userName ??
                           (isFilipino ? "Pangalan ng User" : "User Name"),
-                      style: TextStyle(fontSize: 18, color: Colors.white)),
+                      style: TextStyle(
+                          fontSize: 18,
+                          color: Colors.white)), // User name in drawer
                   Text(userEmail ?? "user@example.com",
-                      style: TextStyle(fontSize: 14, color: Colors.white70)),
+                      style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.white70)), // User email in drawer
                 ],
               ),
             ),
@@ -400,18 +418,19 @@ class _HomeScreenState extends State<HomeScreen> {
               onTap: () async {
                 Navigator.pop(context);
                 final prefs = await SharedPreferences.getInstance();
-                final userId = prefs.getInt('user_id');
+                final userId = prefs.getInt('user_id'); // Get user ID
                 if (userId != null) {
                   Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (_) => MyProductsScreen(userId: userId)));
+                          builder: (_) => MyProductsScreen(
+                              userId: userId))); // Go to My Products
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                         content: Text(isFilipino
                             ? "Walang naka-log in na user."
-                            : "No user logged in.")),
+                            : "No user logged in.")), // Show error if no user
                   );
                 }
               },
@@ -432,11 +451,11 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
       body: isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? Center(child: CircularProgressIndicator()) // Show loading
           : RefreshIndicator(
               onRefresh: () async {
-                await loadProducts();
-                await loadCategories();
+                await loadProducts(); // Refresh products
+                await loadCategories(); // Refresh categories
               },
               child: SingleChildScrollView(
                 physics: AlwaysScrollableScrollPhysics(),
@@ -453,21 +472,25 @@ class _HomeScreenState extends State<HomeScreen> {
                           fit: BoxFit.cover),
                     ),
                     SizedBox(height: 20),
-                    sectionTitle(isFilipino ? "Mga Produkto" : "Products"),
-                    productList(productsSection),
+                    sectionTitle(isFilipino
+                        ? "Mga Produkto"
+                        : "Products"), // Section title
+                    productList(productsSection), // Product list
                     sectionTitleWithAction(
                       isFilipino ? "Pinakamabenta" : "Best Seller",
                       isFilipino ? "Ipakita lahat >" : "See all >",
                     ),
-                    productList(bestSellersSection),
-                    sectionTitle(isFilipino ? "Mga Kategorya" : "Categories"),
-                    categoryGrid(),
+                    productList(bestSellersSection), // Best sellers
+                    sectionTitle(isFilipino
+                        ? "Mga Kategorya"
+                        : "Categories"), // Categories
+                    categoryGrid(), // Category grid
                     sectionTitle(isFilipino
                         ? "Inirerekomenda para sa iyo"
-                        : "Recommended for you"),
-                    recommendedGrid(allProducts),
-                    trendingProductsSection(allProducts),
-                    hotDealsSection(allProducts),
+                        : "Recommended for you"), // Recommended
+                    recommendedGrid(allProducts), // Recommended grid
+                    trendingProductsSection(allProducts), // Trending
+                    hotDealsSection(allProducts), // Hot deals
                     SizedBox(height: 20),
                   ],
                 ),
@@ -483,7 +506,9 @@ class _HomeScreenState extends State<HomeScreen> {
         Text(
           title,
           style: TextStyle(
-              fontSize: 20, fontWeight: FontWeight.w600, color: Colors.black87),
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: Colors.black87), // Section title style
         ),
         SizedBox(height: 6),
         Container(
@@ -510,7 +535,7 @@ class _HomeScreenState extends State<HomeScreen> {
             style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
-                color: Colors.black87),
+                color: Colors.black87), // Section title style
           ),
           InkWell(
             onTap: onActionTap,
@@ -522,7 +547,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 style: TextStyle(
                     color: Colors.deepOrangeAccent,
                     fontSize: 14,
-                    fontWeight: FontWeight.w500),
+                    fontWeight: FontWeight.w500), // Action text style
               ),
             ),
           ),
@@ -533,9 +558,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget categoryGrid() {
     final List<Map<String, dynamic>> shuffled =
-        List<Map<String, dynamic>>.from(categories)..shuffle();
+        List<Map<String, dynamic>>.from(categories)
+          ..shuffle(); // Shuffle categories
     final List<Map<String, dynamic>> displayCategories =
-        shuffled.take(4).toList();
+        shuffled.take(4).toList(); // Show 4 categories
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: GridView.builder(
@@ -556,8 +582,8 @@ class _HomeScreenState extends State<HomeScreen> {
               : 'assets/product_placeholder.png';
           return Card(
             elevation: 2,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12)), // Card shape
             child: InkWell(
               borderRadius: BorderRadius.circular(12),
               onTap: () {
@@ -565,8 +591,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   context,
                   MaterialPageRoute(
                     builder: (_) => CategoryProductsScreen(
-                      initialCategoryId: cat['id'],
-                      initialCategoryName: cat['name'],
+                      initialCategoryId: cat['id'], // Pass category ID
+                      initialCategoryName: cat['name'], // Pass category name
                     ),
                   ),
                 );
@@ -591,7 +617,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     SizedBox(height: 8),
                     Text(cat['name'] ?? '',
                         style: TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 14),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14), // Category name style
                         textAlign: TextAlign.center,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis),
